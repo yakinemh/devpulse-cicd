@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TaskFlow — Gestionnaire de tâches ...</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="logo">
+        <span class="logo-icon">⬡</span>
+        <h1>TaskFlow xxx</h1>
+      </div>
+      <p class="subtitle">Gérez vos tâches simplement ... xx</p>
+    </header>
+
+    <main>
+      <div class="input-area">
+        <input type="text" id="taskInput" placeholder="Nouvelle tâche..." autocomplete="off" />
+        <select id="prioritySelect">
+          <option value="low">Faible</option>
+          <option value="medium" selected>Moyenne</option>
+          <option value="high">Haute</option>
+        </select>
+        <button id="addBtn">Ajouter</button>
+      </div>
+
+      <div class="filters">
+        <button class="filter-btn active" data-filter="all">Toutes</button>
+        <button class="filter-btn" data-filter="pending">En cours</button>
+        <button class="filter-btn" data-filter="done">Terminées</button>
+      </div>
+
+      <ul id="taskList"></ul>
+
+      <div class="stats">
+        <span id="totalCount">0 tâche(s)</span>
+        <span id="doneCount">0 terminée(s)</span>
+      </div>
+    </main>
+
+    <footer>
+      <p>🐳 Déployé avec Docker &nbsp;|&nbsp; <span id="envBadge">dev</span></p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

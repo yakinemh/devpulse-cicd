@@ -1,0 +1,26 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.yakinemah12 }}
+          password: ${{ secrets.dckr_pat_Nij4rZovZcKlc5_D3ZsvsdDzJFU }}
+
+      - name: Build Docker image
+        run: docker build -t aminelaribi22/taskflow-app:latest .
+
+      - name: Docker Push
+        run: docker push aminelaribi22/taskflow-app:latest
+
+      - name: Run Container
+        run: docker compose up -d --build

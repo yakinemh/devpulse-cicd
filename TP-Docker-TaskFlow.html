@@ -1,0 +1,1328 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Docker Lab — TaskFlow</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;600&display=swap");
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg: #0b0e14;
+        --surface: #12161f;
+        --surface2: #181d28;
+        --border: #232836;
+        --text: #dde1ec;
+        --muted: #5c6478;
+        --accent: #4ade80;
+        --accent2: #38bdf8;
+        --warn: #fbbf24;
+        --danger: #f87171;
+        --radius: 12px;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: "DM Sans", sans-serif;
+        font-size: 15px;
+        line-height: 1.7;
+      }
+
+      .layout {
+        display: flex;
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        width: 260px;
+        flex-shrink: 0;
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+        padding: 1.5rem 0;
+      }
+      .sidebar-brand {
+        padding: 0 1.2rem 1.2rem;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 1rem;
+      }
+      .sidebar-brand .whale {
+        font-size: 2rem;
+        display: block;
+        margin-bottom: 0.3rem;
+      }
+      .sidebar-brand h2 {
+        font-family: "Syne", sans-serif;
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--text);
+        letter-spacing: -0.02em;
+      }
+      .sidebar-brand p {
+        font-size: 0.75rem;
+        color: var(--muted);
+      }
+
+      .nav-section {
+        padding: 0 0.8rem;
+        margin-bottom: 0.4rem;
+      }
+      .nav-label {
+        font-size: 0.68rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        padding: 0 0.4rem;
+        margin-bottom: 0.3rem;
+      }
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.45rem 0.7rem;
+        border-radius: 8px;
+        cursor: pointer;
+        color: var(--muted);
+        font-size: 0.85rem;
+        transition: all 0.18s;
+        text-decoration: none;
+        border: none;
+        background: none;
+        width: 100%;
+        text-align: left;
+      }
+      .nav-item:hover {
+        color: var(--text);
+        background: var(--surface2);
+      }
+      .nav-item.active {
+        color: var(--accent);
+        background: rgba(74, 222, 128, 0.1);
+      }
+      .nav-item .num {
+        width: 20px;
+        height: 20px;
+        background: var(--border);
+        border-radius: 5px;
+        font-size: 0.7rem;
+        font-family: "JetBrains Mono", monospace;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .nav-item.active .num {
+        background: var(--accent);
+        color: #0b0e14;
+      }
+
+      .main {
+        flex: 1;
+        padding: 3rem 3.5rem;
+        max-width: 860px;
+      }
+
+      .hero {
+        margin-bottom: 3.5rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid var(--border);
+      }
+      .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: rgba(74, 222, 128, 0.1);
+        border: 1px solid rgba(74, 222, 128, 0.25);
+        color: var(--accent);
+        font-size: 0.75rem;
+        font-family: "Syne", sans-serif;
+        font-weight: 700;
+        padding: 0.25rem 0.8rem;
+        border-radius: 999px;
+        margin-bottom: 1rem;
+      }
+      .hero h1 {
+        font-family: "Syne", sans-serif;
+        font-size: 2.8rem;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        line-height: 1.1;
+        margin-bottom: 0.8rem;
+      }
+      .hero h1 span {
+        color: var(--accent);
+      }
+      .hero p {
+        color: var(--muted);
+        font-size: 1rem;
+        max-width: 580px;
+      }
+
+      .objectives {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.8rem;
+        margin-top: 1.5rem;
+      }
+      .obj-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1rem;
+        font-size: 0.85rem;
+      }
+      .obj-card .icon {
+        font-size: 1.3rem;
+        margin-bottom: 0.4rem;
+      }
+      .obj-card strong {
+        display: block;
+        color: var(--text);
+        margin-bottom: 0.2rem;
+        font-family: "Syne", sans-serif;
+        font-size: 0.85rem;
+      }
+      .obj-card span {
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+
+      .step {
+        margin-bottom: 3rem;
+        scroll-margin-top: 2rem;
+      }
+      .step-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+      .step-num {
+        width: 36px;
+        height: 36px;
+        background: var(--accent);
+        color: #0b0e14;
+        border-radius: 10px;
+        font-family: "Syne", sans-serif;
+        font-size: 0.9rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .step-header h2 {
+        font-family: "Syne", sans-serif;
+        font-size: 1.4rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+      .step p {
+        color: var(--muted);
+        margin-bottom: 1rem;
+      }
+      .step p strong {
+        color: var(--text);
+      }
+
+      .code-block {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        margin: 1rem 0 1.4rem;
+      }
+      .code-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.6rem 1rem;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface2);
+      }
+      .code-header .filename {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.75rem;
+        color: var(--accent2);
+      }
+      .code-header .lang {
+        font-size: 0.7rem;
+        color: var(--muted);
+        background: var(--border);
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
+      }
+      .copy-btn {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        font-size: 0.72rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 5px;
+        cursor: pointer;
+        font-family: "DM Sans", sans-serif;
+        transition: all 0.2s;
+      }
+      .copy-btn:hover {
+        color: var(--text);
+        border-color: var(--text);
+      }
+      .copy-btn.copied {
+        color: var(--accent);
+        border-color: var(--accent);
+      }
+
+      pre {
+        padding: 1.2rem 1.2rem;
+        overflow-x: auto;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.82rem;
+        line-height: 1.75;
+        color: var(--text);
+      }
+      .c-comment {
+        color: #4a5568;
+        font-style: italic;
+      }
+      .c-keyword {
+        color: #f87171;
+      }
+      .c-cmd {
+        color: #4ade80;
+      }
+      .c-str {
+        color: #fbbf24;
+      }
+      .c-var {
+        color: #a78bfa;
+      }
+      .c-num {
+        color: #38bdf8;
+      }
+      .c-flag {
+        color: #fb923c;
+      }
+
+      .callout {
+        display: flex;
+        gap: 0.8rem;
+        padding: 1rem 1.2rem;
+        border-radius: var(--radius);
+        margin: 1rem 0;
+        font-size: 0.88rem;
+        border-left: 3px solid;
+      }
+      .callout.info {
+        background: rgba(56, 189, 248, 0.07);
+        border-color: var(--accent2);
+        color: var(--accent2);
+      }
+      .callout.warn {
+        background: rgba(251, 191, 36, 0.07);
+        border-color: var(--warn);
+        color: var(--warn);
+      }
+      .callout.success {
+        background: rgba(74, 222, 128, 0.07);
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .callout .icon {
+        font-size: 1.1rem;
+        flex-shrink: 0;
+      }
+      .callout div {
+        color: var(--text);
+      }
+      .callout div strong {
+        color: inherit;
+      }
+
+      .file-tree {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.2rem 1.4rem;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.82rem;
+        line-height: 2;
+        margin: 1rem 0;
+      }
+      .tree-dir {
+        color: var(--accent2);
+      }
+      .tree-file {
+        color: var(--text);
+      }
+      .tree-comment {
+        color: var(--muted);
+        font-size: 0.75rem;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+        font-size: 0.85rem;
+      }
+      th {
+        background: var(--surface2);
+        color: var(--muted);
+        font-weight: 500;
+        text-align: left;
+        padding: 0.6rem 1rem;
+        border: 1px solid var(--border);
+      }
+      td {
+        padding: 0.55rem 1rem;
+        border: 1px solid var(--border);
+        color: var(--text);
+      }
+      td code,
+      th code {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.78rem;
+        color: var(--accent2);
+        background: var(--surface2);
+        padding: 0.1rem 0.4rem;
+        border-radius: 4px;
+      }
+
+      .step-divider {
+        height: 1px;
+        background: linear-gradient(to right, var(--border), transparent);
+        margin: 3rem 0;
+      }
+
+      .checklist {
+        list-style: none;
+        margin: 0.8rem 0;
+      }
+      .checklist li {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.6rem;
+        padding: 0.4rem 0;
+        font-size: 0.88rem;
+        color: var(--muted);
+      }
+      .checklist li::before {
+        content: "▷";
+        color: var(--accent);
+        font-size: 0.7rem;
+        margin-top: 0.35rem;
+        flex-shrink: 0;
+      }
+
+      .schema {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        margin: 1rem 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.8rem;
+        font-size: 0.78rem;
+        font-family: "JetBrains Mono", monospace;
+        flex-wrap: wrap;
+      }
+      .schema-box {
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.6rem 1rem;
+        text-align: center;
+        color: var(--text);
+      }
+      .schema-box .label {
+        color: var(--muted);
+        font-size: 0.68rem;
+        margin-bottom: 0.2rem;
+      }
+      .schema-box .val {
+        font-weight: 600;
+        color: var(--accent2);
+      }
+      .schema-arrow {
+        color: var(--muted);
+        font-size: 1.2rem;
+      }
+
+      .progress-bar-wrap {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        height: 6px;
+        margin-bottom: 2rem;
+        overflow: hidden;
+      }
+      .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent), var(--accent2));
+        border-radius: 999px;
+        width: 100%;
+      }
+
+      @media (max-width: 768px) {
+        .sidebar {
+          display: none;
+        }
+        .main {
+          padding: 2rem 1.2rem;
+        }
+        .objectives {
+          grid-template-columns: 1fr;
+        }
+        .hero h1 {
+          font-size: 2rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <!-- ── SIDEBAR ── -->
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <span class="whale">🐳</span>
+          <h2>Docker Lab</h2>
+          <p>TaskFlow — Guided Project</p>
+        </div>
+
+        <div class="nav-section">
+          <p class="nav-label">Introduction</p>
+          <a href="#intro" class="nav-item active">
+            <span class="num">✦</span> Overview
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <p class="nav-label">Steps</p>
+          <a href="#step1" class="nav-item"
+            ><span class="num">1</span> Project Structure</a
+          >
+          <a href="#step2" class="nav-item"
+            ><span class="num">2</span> Dockerfile</a
+          >
+          <a href="#step3" class="nav-item"
+            ><span class="num">3</span> Building the Image</a
+          >
+          <a href="#step4" class="nav-item"
+            ><span class="num">4</span> Running a Container</a
+          >
+          <a href="#step5" class="nav-item"
+            ><span class="num">5</span> Docker Compose</a
+          >
+          <a href="#step6" class="nav-item"
+            ><span class="num">6</span> Env Variables</a
+          >
+          <a href="#step7" class="nav-item"
+            ><span class="num">7</span> Volumes & Hot Reload</a
+          >
+          <a href="#step8" class="nav-item"
+            ><span class="num">8</span> Docker Hub</a
+          >
+          <a href="#step9" class="nav-item"
+            ><span class="num">9</span> Useful Commands</a
+          >
+        </div>
+      </aside>
+
+      <!-- ── MAIN ── -->
+      <main class="main">
+        <!-- HERO -->
+        <section class="hero" id="intro">
+          <div class="hero-badge">🐳 Lab / Practical Work</div>
+          <h1>Docker with<br /><span>TaskFlow</span></h1>
+          <p>
+            Learn to containerize a web application (HTML/CSS/JS) step by step:
+            Dockerfile, images, containers, volumes, and Docker Compose.
+          </p>
+
+          <div class="objectives">
+            <div class="obj-card">
+              <div class="icon">📦</div>
+              <strong>Images</strong>
+              <span>Build and manage Docker images from a Dockerfile</span>
+            </div>
+            <div class="obj-card">
+              <div class="icon">🚀</div>
+              <strong>Containers</strong>
+              <span
+                >Start, stop, and inspect containers via the command line</span
+              >
+            </div>
+            <div class="obj-card">
+              <div class="icon">🔧</div>
+              <strong>Compose</strong>
+              <span>Orchestrate services with docker-compose.yml</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- STEP 1 -->
+        <section class="step" id="step1">
+          <div class="step-header">
+            <div class="step-num">1</div>
+            <h2>Project Structure</h2>
+          </div>
+
+          <p>
+            Create a folder called <strong>docker-project</strong> with the
+            following structure. The application is a task manager called
+            <strong>TaskFlow</strong>.
+          </p>
+
+          <div class="file-tree">
+            <span class="tree-dir">docker-project/</span>
+
+            <span class="tree-file">index.html</span>
+            <span class="tree-comment">← main page</span> │ ├──
+            <span class="tree-file">style.css</span>
+            <span class="tree-comment">← styles</span> │ └──
+            <span class="tree-file">app.js</span>
+            <span class="tree-comment">← JS logic</span> ├──
+            <span class="tree-file">Dockerfile</span>
+            <span class="tree-comment">← image recipe</span> ├──
+            <span class="tree-file">nginx.conf</span>
+            <span class="tree-comment">← server config</span> ├──
+            <span class="tree-file">docker-compose.yml</span>
+            <span class="tree-comment">← orchestration</span> ├──
+            <span class="tree-file">.env.example</span>
+            <span class="tree-comment">← env variables</span> └──
+            <span class="tree-file">.dockerignore</span>
+            <span class="tree-comment">← excluded files</span>
+          </div>
+
+          <div class="callout info">
+            <span class="icon">💡</span>
+            <div>
+              <strong>Why Nginx?</strong> Our application is 100% static
+              (HTML/CSS/JS). Nginx is a lightweight and performant web server,
+              perfect for serving this type of file inside a container.
+            </div>
+          </div>
+
+          <p>Commands to create the structure:</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="filename">Terminal</span>
+              <div style="display: flex; gap: 0.5rem; align-items: center">
+                <span class="lang">bash</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+            </div>
+            <pre>
+<span class="c-cmd">touch</span> Dockerfile nginx.conf docker-compose.yml .dockerignore</pre>
+          </div>
+        </section>
+
+        <div class="step-divider"></div>
+
+        <!-- STEP 2 -->
+        <section class="step" id="step2">
+          <div class="step-header">
+            <div class="step-num">2</div>
+            <h2>Writing the Dockerfile</h2>
+          </div>
+
+          <p>
+            The <strong>Dockerfile</strong> is the recipe that describes how to
+            build your Docker image. Each instruction creates a layer in the
+            final image.
+          </p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <span class="filename">Dockerfile</span>
+              <div style="display: flex; gap: 0.5rem; align-items: center">
+                <span class="lang">dockerfile</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+            </div>
+            <pre><span class="c-comment"># ── Step 1: base image ───────────────────────────</span>
+<span class="c-comment"># nginx:alpine = Nginx + Alpine Linux (~7 MB only)</span>
+<span class="c-keyword">FROM</span> nginx:alpine
+
+<span class="c-comment"># ── Step 2: metadata ─────────────────────────────</span>
+<span class="c-keyword">LABEL</span> maintainer=<span class="c-str">"your.email@example.com"</span>
+<span class="c-keyword">LABEL</span> version=<span class="c-str">"1.0"</span>
+<span class="c-keyword">LABEL</span> description=<span class="c-str">"TaskFlow — Static Nginx Application"</span>
+
+<span class="c-comment"># ── Step 3: copy app files ───────────────────────</span>
+<span class="c-keyword">COPY</span> / /usr/share/nginx/html/
+
+<span class="c-comment"># ── Step 4: copy Nginx config ────────────────────</span>
+<span class="c-keyword">COPY</span> nginx.conf /etc/nginx/conf.d/default.conf
+
+<span class="c-comment"># ── Step 5: port exposed by the container ────────</span>
+<span class="c-keyword">EXPOSE</span> 80
+
+<span class="c-comment"># ── Step 6: startup command ──────────────────────</span>
+<span class="c-keyword">CMD</span> [<span class="c-str">"nginx"</span>, <span class="c-str">"-g"</span>, <span class="c-str">"daemon off;"</span>]</pre>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Instruction</th>
+                <th>Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>FROM</code></td>
+                <td>Base image (starting point)</td>
+              </tr>
+              <tr>
+                <td><code>LABEL</code></td>
+                <td>Metadata (author, version…)</td>
+              </tr>
+              <tr>
+                <td><code>COPY</code></td>
+                <td>Copies local files → container</td>
+              </tr>
+              <tr>
+                <td><code>EXPOSE</code></td>
+                <td>Declares the internal port (documentation)</td>
+              </tr>
+              <tr>
+                <td><code>CMD</code></td>
+                <td>Command run when the container starts</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p>Also create the Nginx configuration file:</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <span class="filename">nginx.conf</span>
+              <div style="display: flex; gap: 0.5rem; align-items: center">
+                <span class="lang">nginx</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+            </div>
+            <pre>server {
+    <span class="c-keyword">listen</span>      <span class="c-num">80</span>;
+    <span class="c-keyword">server_name</span> localhost;
+    <span class="c-keyword">root</span>        /usr/share/nginx/html;
+    <span class="c-keyword">index</span>       index.html;
+
+    <span class="c-comment"># Gzip compression</span>
+    <span class="c-keyword">gzip</span> on;
+    <span class="c-keyword">gzip_types</span> text/css application/javascript text/html;
+
+    location / {
+        <span class="c-keyword">try_files</span> $uri $uri/ /index.html;
+    }
+
+    <span class="c-comment"># Static asset caching</span>
+    location ~* \.(css|js|png|ico)$ {
+        <span class="c-keyword">expires</span> <span class="c-num">7d</span>;
+    }
+}</pre>
+          </div>
+
+          <p>
+            And the <strong>.dockerignore</strong> file to keep the build
+            context lean:
+          </p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <span class="filename">.dockerignore</span>
+              <div style="display: flex; gap: 0.5rem; align-items: center">
+                <span class="lang">text</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+            </div>
+            <pre>
+.git
+*.md
+.env
+node_modules</pre
+            >
+          </div>
+        </section>
+
+        <div class="step-divider"></div>
+
+        <!-- STEP 3 -->
+        <section class="step" id="step3">
+          <div class="step-header">
+            <div class="step-num">3</div>
+            <h2>Building the Image (docker build)</h2>
+          </div>
+
+          <p>
+            The <code>docker build</code> command reads the Dockerfile and
+            creates a local Docker image. Run it from the
+            <strong>docker-project</strong> folder.
+          </p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <span class="filename">Terminal</span>
+              <div style="display: flex; gap: 0.5rem; align-items: center">
+                <span class="lang">bash</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+            </div>
+            <pre><span class="c-comment"># Build the image and give it a name + tag</span>
+<span class="c-cmd">docker build</span> <span class="c-flag">-t</span> taskflow:1.0 .
+
+<span class="c-comment"># Verify the image was created</span>
+<span class="c-cmd">docker images</span>
+
+<span class="c-comment"># Inspect image metadata</span>
+<span class="c-cmd">docker inspect</span> taskflow:1.0
+
+<span class="c-comment"># View layer history</span>
+<span class="c-cmd">docker history</span> taskflow:1.0</pre>
+          </div>
+
+          <div class="callout warn">
+            <span class="icon">⚠️</span>
+            <div>
+              <strong>Tag syntax:</strong> <code>name:version</code>. If you
+              omit the tag, Docker uses <code>latest</code> by default. Always
+              use explicit versioning in production.
+            </div>
+          </div>
+
+          <p>Expected output of <code>docker images</code>:</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="filename">Output</span>
+              <span class="lang">text</span>
+            </div>
+            <pre>REPOSITORY   TAG    IMAGE ID       CREATED         SIZE
+taskflow     1.0    a3f9c2e81b4d   2 minutes ago   <span class="c-num">24.3MB</span></pre>
+          </div>
+
+          <div class="schema">
+            <div class="schema-box">
+              <div class="label">Dockerfile</div>
+              <div class="val">📄 Recipe</div>
+            </div>
+            <div class="schema-arrow">──▶</div>
+            <div class="schema-box">
+              <div class="label">docker build</div>
+              <div class="val">🔨 Build</div>
+            </div>
+            <div class="schema-arrow">──▶</div>
+            <div class="schema-box">
+              <div class="label">Local Image</div>
+              <div class="val">📦 taskflow:1.0</div>
+            </div>
+          </div>
+        </section>
+
+        <div class="step-divider"></div>
+
+        <!-- STEP 4 -->
+        <section class="step" id="step4">
+          <div class="step-header">
+            <div class="step-num">4</div>
+            <h2>Running a Container (docker run)</h2>
+          </div>
+
+          <p>
+            A <strong>container</strong> is a running instance of an image.
+            Here's how to start one from your <code>taskflow:1.0</code> image.
+          </p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <span class="filename">Terminal</span>
+              <div style="display: flex; gap: 0.5rem; align-items: center">
+                <span class="lang">bash</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+            </div>
+            <pre><span class="c-comment"># Run the container in the background (-d)</span>
+<span class="c-comment"># Map host port 3000 to internal port 80</span>
+<span class="c-cmd">docker run</span> <span class="c-flag">-d</span> <span class="c-flag">-p</span> <span class="c-num">3000</span>:80 <span class="c-flag">--name</span> taskflow-app taskflow:1.0
+
+<span class="c-comment"># Check the container is running</span>
+<span class="c-cmd">docker ps</span>
+
+<span class="c-comment"># Follow logs in real time</span>
+<span class="c-cmd">docker logs</span> <span class="c-flag">-f</span> taskflow-app
+
+<span class="c-comment"># Open an interactive shell inside the container</span>
+<span class="c-cmd">docker exec</span> <span class="c-flag">-it</span> taskflow-app sh
+
+<span class="c-comment"># Stop the container</span>
+<span class="c-cmd">docker stop</span> taskflow-app
+
+<span class="c-comment"># Remove the container</span>
+<span class="c-cmd">docker rm</span> taskflow-app</pre>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Option</th>
+                <th>Meaning</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>-d</code></td>
+                <td>Detached mode (background)</td>
+              </tr>
+              <tr>
+                <td><code>-p 3000:80</code></td>
+                <td>Host port 3000 → container port 80</td>
+              </tr>
+              <tr>
+                <td><code>--name</code></td>
+                <td>Custom container name</td>
+              </tr>
+              <tr>
+                <td><code>-it</code></td>
+                <td>Interactive mode with terminal</td>
+              </tr>
+              <tr>
+                <td><code>-f</code></td>
+                <td>Follow logs in real time</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="callout success">
+            <span class="icon">✅</span>
+            <div>
+              Open your browser at <strong>http://localhost:3000</strong> to see
+              the TaskFlow application running inside Docker!
+            </div>
+          </div>
+
+          <div class="schema">
+            <div class="schema-box">
+              <div class="label">Host (your machine)</div>
+              <div class="val">:3000</div>
+            </div>
+            <div class="schema-arrow">──▶</div>
+            <div class="schema-box">
+              <div class="label">Docker Container</div>
+              <div class="val">:80 (Nginx)</div>
+            </div>
+            <div class="schema-arrow">──▶</div>
+            <div class="schema-box">
+              <div class="label">Application</div>
+              <div class="val">TaskFlow 🎯</div>
+            </div>
+          </div>
+        </section>
+
+        <div class="step-divider"></div>
+
+        <!-- STEP 5 -->
+        <section class="step" id="step5">
+          <div class="step-header">
+            <div class="step-num">5</div>
+            <h2>Docker Compose</h2>
+          </div> 
+
+          <p>
+            Docker Compose lets you define and run multiple services in a
+            <strong>docker-compose.yml</strong> file. It's much more convenient
+            than long <code>docker run</code> commands.
+          </p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <span class="filename">docker-compose.yml</span>
+              <div style="display: flex; gap: 0.5rem; align-items: center">
+                <span class="lang">yaml</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+            </div>
+            <pre><span class="c-keyword">version:</span> <span class="c-str">"3.9"</span>
+
+<span class="c-keyword">services:</span>
+
+  <span class="c-comment"># ── Main service: the application ─────────────</span>
+  <span class="c-keyword">taskflow:</span>
+    <span class="c-keyword">build:</span>
+      <span class="c-keyword">context:</span> .
+      <span class="c-keyword">dockerfile:</span> Dockerfile
+
+    <span class="c-keyword">container_name:</span> <span class="c-str">taskflow-app</span>
+
+    <span class="c-keyword">ports:</span>
+      - <span class="c-str">"${APP_PORT:-3000}:80"</span>
+
+    <span class="c-keyword">environment:</span>
+      - <span class="c-var">NODE_ENV</span>=<span class="c-str">${NODE_ENV:-development}</span>
+
+    <span class="c-keyword">volumes:</span>
+      - <span class="c-str">taskflow-web:/usr/share/nginx/html</span>
+
+    <span class="c-keyword">restart:</span> unless-stopped
+
+    <span class="c-keyword">healthcheck:</span>
+      <span class="c-keyword">test:</span> [<span class="c-str">"CMD"</span>, <span class="c-str">"wget"</span>, <span class="c-str">"-q"</span>, <span class="c-str">"--spider"</span>, <span class="c-str">"http://localhost"</span>]
+      <span class="c-keyword">interval:</span> <span class="c-num">30s</span>
+      <span class="c-keyword">timeout:</span>  <span class="c-num">5s</span>
+      <span class="c-keyword">retries:</span>  <span class="c-num">3</span>
+
+    <span class="c-keyword">networks:</span>
+      - taskflow-network
+<span class="c-keyword">volumes:</span>
+  <span class="c-keyword">taskflow-web:</span>
+    <span class="c-keyword">driver:</span> local
+
+<span class="c-keyword">networks:</span>
+  <span class="c-keyword">taskflow-network:</span>
+    <span class="c-keyword">driver:</span> bridge</pre>
+          </div>
+
+          <div class="code-block">
+            <div class="code-header">
+              <span class="filename">Terminal — Compose Commands</span>
+              <div style="display: flex; gap: 0.5rem; align-items: center">
+                <span class="lang">bash</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+            </div>
+            <pre><span class="c-comment"># Start all services (auto build)</span>
+<span class="c-cmd">docker compose up</span> <span class="c-flag">-d</span>
+
+<span class="c-comment"># Rebuild the image if the Dockerfile changed</span>
+<span class="c-cmd">docker compose up</span> <span class="c-flag">-d --build</span>
+
+<span class="c-comment"># Check service status</span>
+<span class="c-cmd">docker compose ps</span>
+
+<span class="c-comment"># View logs from all services</span>
+<span class="c-cmd">docker compose logs</span> <span class="c-flag">-f</span>
+
+<span class="c-comment"># Stop services (without removing)</span>
+<span class="c-cmd">docker compose stop</span>
+
+<span class="c-comment"># Stop AND remove containers</span>
+<span class="c-cmd">docker compose down</span>
+
+<span class="c-comment"># Also remove volumes and images</span>
+<span class="c-cmd">docker compose down</span> <span class="c-flag">-v --rmi all</span></pre>
+          </div>
+        </section>
+
+        <div class="step-divider"></div>
+
+        <!-- STEP 6 -->
+        <section class="step" id="step6">
+          <div class="step-header">
+            <div class="step-num">6</div>
+            <h2>Environment Variables</h2>
+          </div>
+
+          <p>
+            Docker Compose can read a <strong>.env</strong> file to inject
+            variables into your services. This is essential for separating
+            configuration across environments (dev, prod).
+          </p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <span class="filename">.env.example → copy to .env</span>
+              <div style="display: flex; gap: 0.5rem; align-items: center">
+                <span class="lang">env</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+            </div>
+            <pre><span class="c-comment"># Port exposed on the host machine</span>
+<span class="c-var">APP_PORT</span>=<span class="c-num">3000</span>
+
+<span class="c-comment"># Environment: development | production</span>
+<span class="c-var">NODE_ENV</span>=development</pre>
+          </div>
+
+          <div class="code-block">
+            <div class="code-header">
+              <span class="filename">Terminal</span>
+              <div style="display: flex; gap: 0.5rem; align-items: center">
+                <span class="lang">bash</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+            </div>
+            <pre><span class="c-comment"># Create the .env from the example</span>
+<span class="c-cmd">cp</span> .env.example .env
+
+<span class="c-comment"># Run with an inline variable override</span>
+<span class="c-comment" style="color:red"># Run this command using git bash in the same project directory</span>
+<span class="c-var">APP_PORT</span>=8080 <span class="c-cmd">docker compose up</span> <span class="c-flag">-d</span>
+
+<span class="c-comment"># Inspect a container's environment variables</span>
+<span class="c-cmd">docker inspect</span> <span class="c-flag">--format</span> <span class="c-str">'{{range .Config.Env}}{{.}}{{"\n"}}{{end}}'</span> taskflow-app</pre>
+          </div>
+
+          <div class="callout warn">
+            <span class="icon">🔐</span>
+            <div>
+              <strong>Security:</strong> Always add <code>.env</code> to your
+              <code>.gitignore</code>. Never commit secrets (passwords, API
+              keys) in a Dockerfile or docker-compose.yml.
+            </div>
+          </div>
+        </section>
+
+        <div class="step-divider"></div>
+
+        <!-- STEP 7 -->
+        <section class="step" id="step7">
+          <div class="step-header">
+            <div class="step-num">7</div>
+            <h2>Volumes & Hot Reload</h2>
+          </div>
+
+          <p>
+            <strong>Volumes</strong> allow you to mount a folder from your
+            machine into the container. Any change in <code>/</code> is
+            immediately visible without rebuilding the image.
+          </p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <span class="filename">docker-compose.yml — volume section</span>
+              <div style="display: flex; gap: 0.5rem; align-items: center">
+                <span class="lang">yaml</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+            </div>
+            <pre><span class="c-keyword">volumes:</span>
+  <span class="c-comment"># Mount the source code (read-only inside the container)</span>
+  - <span class="c-str">./html:/usr/share/nginx/html</span>
+  <span class="c-comment">#  ^local folder  ^container folder  ^:ro = read-only</span></pre>
+          </div>
+
+          <p>Try it live:</p>
+
+          <ul class="checklist">
+            <li>Run <code>docker compose up -d</code></li>
+            <li>Open <strong>http://localhost:3000</strong></li>
+            <li>Edit <code>index.html</code> (e.g. change the title)</li>
+            <li>
+              Refresh the browser → the change is <strong>instant</strong>!
+            </li>
+          </ul>
+
+          <div class="code-block">
+            <div class="code-header">
+              <span class="filename">Terminal — Volume Management</span>
+              <div style="display: flex; gap: 0.5rem; align-items: center">
+                <span class="lang">bash</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+            </div>
+            <pre><span class="c-comment"># List all Docker volumes</span>
+<span class="c-cmd">docker volume ls</span>
+
+<span class="c-comment"># Inspect a named volume</span>
+<span class="c-cmd">docker volume inspect</span> &lt;volume_name&gt;
+
+<span class="c-comment"># Remove unused volumes</span>
+<span class="c-cmd">docker volume prune</span></pre>
+          </div>
+        </section>
+
+        <div class="step-divider"></div>
+
+        <!-- STEP 8 -->
+        <section class="step" id="step8">
+          <div class="step-header">
+            <div class="step-num">8</div>
+            <h2>Publishing to Docker Hub</h2>
+          </div>
+
+          <p>
+            Docker Hub is the official public registry. You can push your images
+            there to share them or deploy them on a remote server.
+          </p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <span class="filename">Terminal</span>
+              <div style="display: flex; gap: 0.5rem; align-items: center">
+                <span class="lang">bash</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+            </div>
+            <pre><span class="c-comment"># 1. Log in to Docker Hub</span>
+<span class="c-cmd">docker login</span>
+
+<span class="c-comment"># 2. Tag the image with your Docker Hub username</span>
+<span class="c-comment">#    Format: yourusername/image-name:tag</span>
+<span class="c-cmd">docker tag</span> taskflow:1.0 <span class="c-var">yourusername</span>/taskflow:1.0
+
+<span class="c-comment"># 3. Push the image to the registry</span>
+<span class="c-cmd">docker push</span> <span class="c-var">yourusername</span>/taskflow:1.0
+
+<span class="c-comment"># 4. On another server: pull and run</span>
+<span class="c-cmd">docker pull</span> <span class="c-var">yourusername</span>/taskflow:1.0
+<span class="c-cmd">docker run</span> <span class="c-flag">-d</span> <span class="c-flag">-p</span> 80:80 <span class="c-var">yourusername</span>/taskflow:1.0</pre>
+          </div>
+
+          <div class="schema">
+            <div class="schema-box">
+              <div class="label">Local Machine</div>
+              <div class="val">📦 taskflow:1.0</div>
+            </div>
+            <div class="schema-arrow">──push──▶</div>
+            <div class="schema-box">
+              <div class="label">Docker Hub</div>
+              <div class="val">☁️ Registry</div>
+            </div>
+            <div class="schema-arrow">──pull──▶</div>
+            <div class="schema-box">
+              <div class="label">Prod Server</div>
+              <div class="val">🚀 Deployed</div>
+            </div>
+          </div>
+        </section>
+
+        <div class="step-divider"></div>
+
+        <!-- STEP 9 -->
+        <section class="step" id="step9">
+          <div class="step-header">
+            <div class="step-num">9</div>
+            <h2>Essential Commands — Cheat Sheet</h2>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Command</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>docker build -t name:tag .</code></td>
+                <td>Build an image</td>
+              </tr>
+              <tr>
+                <td><code>docker images</code></td>
+                <td>List local images</td>
+              </tr>
+              <tr>
+                <td><code>docker rmi name:tag</code></td>
+                <td>Remove an image</td>
+              </tr>
+              <tr>
+                <td><code>docker run -d -p H:C name</code></td>
+                <td>Run a container in the background</td>
+              </tr>
+              <tr>
+                <td><code>docker ps</code></td>
+                <td>List running containers</td>
+              </tr>
+              <tr>
+                <td><code>docker ps -a</code></td>
+                <td>All containers (including stopped)</td>
+              </tr>
+              <tr>
+                <td><code>docker stop id</code></td>
+                <td>Stop a container</td>
+              </tr>
+              <tr>
+                <td><code>docker rm id</code></td>
+                <td>Remove a container</td>
+              </tr>
+              <tr>
+                <td><code>docker exec -it id sh</code></td>
+                <td>Open a shell in the container</td>
+              </tr>
+              <tr>
+                <td><code>docker logs -f id</code></td>
+                <td>Follow logs in real time</td>
+              </tr>
+              <tr>
+                <td><code>docker compose up -d</code></td>
+                <td>Start Compose services</td>
+              </tr>
+              <tr>
+                <td><code>docker compose down</code></td>
+                <td>Stop and remove</td>
+              </tr>
+              <tr>
+                <td><code>docker system prune -a</code></td>
+                <td>Clean everything (images, containers, volumes)</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="callout success">
+            <span class="icon">🎉</span>
+            <div>
+              <strong>Congratulations!</strong> You've containerized a complete
+              web application with Docker. You now know how to use Dockerfile,
+              docker build, docker run, docker-compose, and Docker Hub.
+            </div>
+          </div>
+
+          <p
+            style="color: var(--muted); font-size: 0.85rem; margin-top: 1.5rem"
+          >
+            <strong style="color: var(--text)">Next steps:</strong> Multi-stage
+            builds, Docker Swarm, Kubernetes (K8s), secrets management, CI/CD
+            with GitHub Actions.
+          </p>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      function copyCode(btn) {
+        const pre = btn.closest(".code-block").querySelector("pre");
+        navigator.clipboard.writeText(pre.innerText).then(() => {
+          btn.textContent = "✓ Copied";
+          btn.classList.add("copied");
+          setTimeout(() => {
+            btn.textContent = "Copy";
+            btn.classList.remove("copied");
+          }, 2000);
+        });
+      }
+
+      const sections = document.querySelectorAll("section[id]");
+      const navItems = document.querySelectorAll(".nav-item");
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              navItems.forEach((n) => n.classList.remove("active"));
+              const active = document.querySelector(
+                `.nav-item[href="#${e.target.id}"]`,
+              );
+              if (active) active.classList.add("active");
+            }
+          });
+        },
+        { rootMargin: "-30% 0px -60% 0px" },
+      );
+
+      sections.forEach((s) => observer.observe(s));
+    </script>
+  </body>
+</html>

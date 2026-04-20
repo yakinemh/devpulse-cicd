@@ -1,0 +1,57 @@
+name: PR Check
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  pr-summary:
+    name: PR Summary
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Analyser les fichiers modifiés et générer un résumé
+        run: |
+          echo "## 📋 Résumé de la Pull Request" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Infos générales
+          echo "**Branch :** ${{ github.head_ref }} → ${{ github.base_ref }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Auteur :** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Fichiers modifiés
+          FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+          TOTAL=$(echo "$FILES" | wc -l)
+
+          echo "### 📁 Fichiers modifiés ($TOTAL)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "$FILES" | while read file; do
+            ext="${file##*.}"
+            case $ext in
+              html) echo "- 🟠 \`$file\`" >> $GITHUB_STEP_SUMMARY ;;
+              css)  echo "- 🔵 \`$file\`" >> $GITHUB_STEP_SUMMARY ;;
+              js)   echo "- 🟡 \`$file\`" >> $GITHUB_STEP_SUMMARY ;;
+              *)    echo "- ⚪ \`$file\`" >> $GITHUB_STEP_SUMMARY ;;
+            esac
+          done
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Stats par type
+          HTML=$(echo "$FILES" | grep -c "\.html$" || true)
+          CSS=$(echo "$FILES"  | grep -c "\.css$"  || true)
+          JS=$(echo "$FILES"   | grep -c "\.js$"   || true)
+
+          echo "### 📊 Stats" >> $GITHUB_STEP_SUMMARY
+          echo "| Type | Fichiers modifiés |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🟠 HTML | $HTML |"         >> $GITHUB_STEP_SUMMARY
+          echo "| 🔵 CSS  | $CSS |"          >> $GITHUB_STEP_SUMMARY
+          echo "| 🟡 JS   | $JS |"           >> $GITHUB_STEP_SUMMARY
